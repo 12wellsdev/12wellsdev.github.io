@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evans Protocol</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #1a1a1a;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #f0ede8;
+    --muted: #888;
+    --dim: #555;
+    --accent: #c8f23a;
+    --accent2: #ff4d1c;
+    --push: #3a8fff;
+    --pull: #3af5a0;
+    --legs: #c17bff;
+    --boxing: #ff6b35;
+    --full: #ffd93d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 0 0 80px;
+  }
+
+  /* Header */
+  .header {
+    padding: 32px 20px 20px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 180px; height: 180px;
+    background: radial-gradient(circle, rgba(200,242,58,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .header-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    line-height: 0.95;
+    color: var(--text);
+    margin-bottom: 16px;
+    letter-spacing: 0.02em;
+  }
+  .header-title span { color: var(--accent); }
+  .stats-row {
+    display: flex;
+    gap: 6px;
+  }
+  .stat-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .stat-pill strong { color: var(--text); font-weight: 500; }
+
+  /* Day nav */
+  .day-nav {
+    display: flex;
+    gap: 0;
+    padding: 16px 20px 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .day-nav::-webkit-scrollbar { display: none; }
+  .day-btn {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .day-btn:hover { background: var(--surface2); }
+  .day-btn.active { background: var(--surface2); }
+  .day-btn .d-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .day-btn.active .d-label { color: var(--muted); }
+  .day-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: #fff;
+    text-transform: uppercase;
+  }
+  .day-btn.active .day-dot {
+    box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px currentColor;
+  }
+  .active-bar {
+    position: absolute;
+    bottom: -1px;
+    left: 50%; transform: translateX(-50%);
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0;
+  }
+  .day-btn.active .active-bar { opacity: 1; }
+
+  /* Content */
+  .content { padding: 20px; }
+
+  .day-header {
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .day-type-badge {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+    display: inline-block;
+    margin-bottom: 8px;
+  }
+  .day-big-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    letter-spacing: 0.03em;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .day-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* Section */
+  .section { margin-bottom: 24px; }
+  .section-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Exercise card */
+  .ex-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    transition: border-color 0.15s, background 0.15s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .ex-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: currentColor;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .ex-card.done {
+    background: rgba(200,242,58,0.04);
+    border-color: rgba(200,242,58,0.15);
+  }
+  .ex-card.done::before { opacity: 0.6; color: var(--accent); }
+  .ex-card.done .ex-name { text-decoration: line-through; color: var(--dim); }
+  .ex-left { flex: 1; min-width: 0; }
+  .ex-name {
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--text);
+    margin-bottom: 3px;
+    line-height: 1.3;
+  }
+  .ex-why {
+    font-size: 12px;
+    color: var(--dim);
+    line-height: 1.4;
+  }
+  .ex-right { text-align: right; flex-shrink: 0; }
+  .ex-detail {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    margin-bottom: 3px;
+  }
+  .check-btn {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border2);
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    margin-left: auto;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .ex-card.done .check-btn {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .check-btn svg { display: none; }
+  .ex-card.done .check-btn svg { display: block; }
+
+  /* Note box */
+  .note-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 10px 10px 0;
+    padding: 12px 14px;
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+  .note-box strong { color: var(--text); font-weight: 500; }
+
+  /* Progress bar */
+  .progress-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .progress-track {
+    flex: 1;
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+  .progress-text {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .progress-text strong { color: var(--accent); font-weight: 500; }
+
+  /* Rest day */
+  .rest-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 20px;
+    text-align: center;
+    margin-top: 8px;
+  }
+  .rest-icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+  }
+  .rest-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--text);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+  }
+  .rest-sub { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+  /* Color map */
+  .c-push { color: var(--push); }
+  .c-pull { color: var(--pull); }
+  .c-legs { color: var(--legs); }
+  .c-boxing { color: var(--boxing); }
+  .c-full { color: var(--full); }
+  .c-rest { color: var(--dim); }
+
+  .bg-push { background: rgba(58,143,255,0.12); color: var(--push); }
+  .bg-pull { background: rgba(58,245,160,0.12); color: var(--pull); }
+  .bg-legs { background: rgba(193,123,255,0.12); color: var(--legs); }
+  .bg-boxing { background: rgba(255,107,53,0.12); color: var(--boxing); }
+  .bg-full { background: rgba(255,217,61,0.12); color: var(--full); }
+  .bg-rest { background: var(--surface2); color: var(--dim); }
+  .dot-push { background: var(--push); }
+  .dot-pull { background: var(--pull); }
+  .dot-legs { background: var(--legs); }
+  .dot-boxing { background: var(--boxing); }
+  .dot-full { background: var(--full); }
+  .dot-rest { background: var(--surface2); border: 1px solid var(--border2); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">8-Week Program</div>
+  <div class="header-title">EVANS<br><span>PROTOCOL</span></div>
+  <div class="stats-row">
+    <div class="stat-pill"><strong>6</strong> days/week</div>
+    <div class="stat-pill"><strong>Recomp</strong> phase</div>
+    <div class="stat-pill"><strong>3x</strong> boxing</div>
+  </div>
+</div>
+
+<div class="day-nav" id="dayNav"></div>
+<div class="content" id="content"></div>
+
+<script>
+const days = [
+  {
+    id:"mon", label:"Mon", type:"Push", typeClass:"push",
+    title:"CHEST SHOULDERS TRICEPS",
+    subtitle:"Weighted dips anchor this session — forward lean for chest, upright for triceps. Load the vest as heavy as you can manage for 6 clean reps.",
+    sections:[
+      { name:"Warm-up", exs:[
+        { name:"Jump rope", detail:"3 min", why:"Footwork + fat burn activation" },
+        { name:"Band pull-apart", detail:"3×15", why:"Shoulder health before pressing" },
+        { name:"Shoulder CAR circles", detail:"1 min/side", why:"Joint prep" }
+      ]},
+      { name:"Size block", exs:[
+        { name:"Weighted dips (vest)", detail:"4×6-10", why:"Top mass builder — chest, tri, front delt. Direct boxing pressing power." },
+        { name:"Incline DB press", detail:"4×8-10", why:"Upper chest = wide Toji look" },
+        { name:"Cable fly (low-to-high)", detail:"3×12-15", why:"Upper chest isolation, constant tension" },
+        { name:"DB lateral raise", detail:"4×15", why:"Shoulder width — biggest visual impact" },
+        { name:"Overhead DB press", detail:"3×10", why:"Boulder shoulders + boxing guard strength" },
+        { name:"Tricep rope pushdown", detail:"3×12", why:"Arm size + punch extension power" },
+        { name:"Overhead cable tricep ext.", detail:"3×12", why:"Long head — makes arms look bigger from behind" }
+      ]},
+      { name:"Boxing finisher", exs:[
+        { name:"Shadow boxing", detail:"3×2 min", why:"Jab-cross combos — tire the shoulders with intent" }
+      ]}
+    ],
+    note:"Load weighted dips as your primary size movement. Progressive overload every week — even half a plate extra matters."
+  },
+  {
+    id:"tue", label:"Tue", type:"Boxing + Mobility", typeClass:"boxing",
+    title:"BOXING & MOBILITY",
+    subtitle:"Technique day. Hip mobility directly increases rotational power in your cross. Every mobility minute is an investment in your punching.",
+    sections:[
+      { name:"Conditioning", exs:[
+        { name:"Jump rope", detail:"6 min", why:"Footwork, conditioning, fat burn" }
+      ]},
+      { name:"Shadow boxing — structured", exs:[
+        { name:"Round 1 — Jab only", detail:"2 min", why:"Snap and retract, footwork in and out" },
+        { name:"Round 2 — Jab-cross", detail:"2 min", why:"Rotate the hips on every single cross" },
+        { name:"Round 3 — 1-2-3", detail:"2 min", why:"Jab-cross-hook, head movement after every combo" },
+        { name:"Round 4 — Slip & counter", detail:"2 min", why:"Bob, weave, fire back immediately" },
+        { name:"Round 5 — Free", detail:"2 min", why:"Simulate a real round. Go hard." }
+      ]},
+      { name:"Mobility — non-negotiable", exs:[
+        { name:"90/90 hip stretch", detail:"2 min/side", why:"Unlocks hip rotation = better punches + no back pain" },
+        { name:"Couch stretch", detail:"90 sec/leg", why:"Hip flexors — tight hips pull on lower back" },
+        { name:"Thoracic rotation (kneeling)", detail:"10 reps/side", why:"Upper back rotation = more punch power" },
+        { name:"Hamstring band stretch", detail:"90 sec/leg", why:"Tight hamstrings = lower back pain source" },
+        { name:"Dead hang", detail:"3×30 sec", why:"Spinal decompression — best lower back fix" },
+        { name:"Cat-cow", detail:"2 min", why:"Lumbar mobility and awareness" }
+      ]}
+    ],
+    note:"Don't skip this day. Tight hips and hamstrings are the primary cause of your lower back pain. Fix them and your boxing improves simultaneously."
+  },
+  {
+    id:"wed", label:"Wed", type:"Pull", typeClass:"pull",
+    title:"BACK BICEPS REAR DELTS",
+    subtitle:"Demon back starts here. Weighted pull-ups are your single best width builder. Chest-supported rows keep the lumbar safe while building thickness.",
+    sections:[
+      { name:"Warm-up", exs:[
+        { name:"Band face pulls", detail:"3×20", why:"Rear delt + rotator cuff activation" },
+        { name:"Dead hang", detail:"2×30 sec", why:"Shoulder prep + spine decompression" }
+      ]},
+      { name:"Size block", exs:[
+        { name:"Weighted pull-ups (vest)", detail:"5×5-8", why:"#1 back width builder. Demon back. Load weekly." },
+        { name:"Chest-supported DB row", detail:"4×10", why:"Thickness with zero lumbar stress" },
+        { name:"Lat pulldown (wide grip)", detail:"3×12", why:"Lat sweep — full stretch at the top" },
+        { name:"Cable row (close grip)", detail:"3×12", why:"Mid-back density" },
+        { name:"Rear delt cable fly", detail:"4×15", why:"Shoulder roundness + boxing guard endurance" },
+        { name:"Incline DB curl", detail:"3×10", why:"Long head bicep — peak and length" },
+        { name:"Hammer curl", detail:"3×12", why:"Brachialis — makes arms look thicker overall" }
+      ]},
+      { name:"Boxing finisher", exs:[
+        { name:"Shadow boxing", detail:"3×2 min", why:"Defense emphasis — slipping, rolling, counters" }
+      ]}
+    ],
+    note:"If weighted pull-ups give you less than 3 reps, drop the vest and keep volume high. Progressive overload on these every week is the goal."
+  },
+  {
+    id:"thu", label:"Thu", type:"Boxing", typeClass:"boxing",
+    title:"BAG WORK & CORE",
+    subtitle:"Your best fat-burning session. 6 hard rounds burns serious calories while building real skill. Treat every round like it counts.",
+    sections:[
+      { name:"Warm-up", exs:[
+        { name:"Jump rope", detail:"5 min", why:"Double unders when possible — footwork speed" }
+      ]},
+      { name:"Bag work — 6 rounds", exs:[
+        { name:"Rounds 1-2 — Jab-cross", detail:"2 min each", why:"Power and snap — reset footwork between combos" },
+        { name:"Rounds 3-4 — Full combos", detail:"2 min each", why:"1-2-3, 1-2-3-2, 1-2-body-3" },
+        { name:"Round 5 — Body shots", detail:"2 min", why:"Dig hooks to the liver and ribs" },
+        { name:"Round 6 — All out", detail:"2 min", why:"Max output. Empty the tank." }
+      ]},
+      { name:"Core — boxing specific", exs:[
+        { name:"Hollow body hold", detail:"3×30 sec", why:"Full trunk brace for punching power" },
+        { name:"Pallof press (cable)", detail:"3×12/side", why:"Anti-rotation = punch without folding at the waist" },
+        { name:"Ab wheel rollout", detail:"3×10", why:"Full core — trunk stability under load" },
+        { name:"Hanging leg raise", detail:"3×12", why:"Lower abs + hip flexor strength for footwork" }
+      ]}
+    ],
+    note:"Core anti-rotation work (Pallof press) directly transfers to punching. A stable trunk means more power delivered to the target."
+  },
+  {
+    id:"fri", label:"Fri", type:"Legs", typeClass:"legs",
+    title:"LEGS & EXPLOSIVE POWER",
+    subtitle:"Bulgarian split squats are brutal but essential. They fix imbalances, build mass, and are boxing-stance specific. Start lighter than you think.",
+    sections:[
+      { name:"Warm-up — mandatory", exs:[
+        { name:"Hip circle warm-up", detail:"2 min", why:"Grease the hip joint before any loading" },
+        { name:"Banded monster walks", detail:"2×20 steps", why:"Glute activation — protects knees and back" },
+        { name:"Leg swings", detail:"20 each direction", why:"Dynamic hamstring and hip prep" }
+      ]},
+      { name:"Size block", exs:[
+        { name:"Bulgarian split squat", detail:"4×8/leg", why:"#1 leg mass builder — fixes imbalances, boxing-specific" },
+        { name:"Leg press (feet high)", detail:"4×10-12", why:"Glute and hamstring focus, low spinal load" },
+        { name:"Romanian deadlift (DB)", detail:"3×10", why:"Hamstring mass + safe hip hinge pattern" },
+        { name:"Nordic hamstring curl", detail:"3×6-8", why:"Hamstring strength — injury protection and size" },
+        { name:"Seated calf raise", detail:"4×15", why:"Soleus — develops the lower leg thickness" },
+        { name:"Standing calf raise", detail:"4×15", why:"Gastrocnemius — visible calf mass" }
+      ]},
+      { name:"Explosive finisher", exs:[
+        { name:"Box jump", detail:"4×5", why:"Max height, full reset — boxing power from the floor" },
+        { name:"Jump rope sprints", detail:"4×30 sec", why:"All out — footwork speed and fat burn" }
+      ]}
+    ],
+    note:"No barbell back squat while your lower back is compromised. BSS builds the same strength without the spinal load. Add weight every week."
+  },
+  {
+    id:"sat", label:"Sat", type:"Full body", typeClass:"full",
+    title:"CALISTHENICS & ARMS",
+    subtitle:"Two dip sessions and two pull-up sessions per week is the fastest upper body formula. Arms get dedicated volume here plus secondary work Mon and Wed.",
+    sections:[
+      { name:"Calisthenics park", exs:[
+        { name:"Weighted dips (vest)", detail:"4×8-12", why:"Second dip session — frequency is the size shortcut" },
+        { name:"Weighted pull-ups (vest)", detail:"4×6-8", why:"Second pull-up session — back and bicep frequency" },
+        { name:"L-sit hold", detail:"3×15 sec", why:"Core, hip flexors, shoulder depression" },
+        { name:"Muscle-up practice", detail:"5×3 attempts", why:"Trains explosive pulling power — long term goal" }
+      ]},
+      { name:"Arm specialization", exs:[
+        { name:"EZ bar curl", detail:"3×10", why:"Bicep mass — bilateral load" },
+        { name:"Overhead cable tricep ext.", detail:"3×12", why:"Long head — arm size from behind" },
+        { name:"Cable curl (single arm)", detail:"3×15", why:"Peak contraction, constant tension" },
+        { name:"Cable tricep kickback", detail:"3×15", why:"Full squeeze at lockout — finishing move" }
+      ]},
+      { name:"Conditioning finisher", exs:[
+        { name:"Jump rope", detail:"5 min", why:"Steady pace — active recovery and fat burn" },
+        { name:"Shadow boxing", detail:"2×2 min", why:"Flow state — loose, rhythmic, don't overthink it" }
+      ]}
+    ],
+    note:"Arms are your most underdeveloped group. This session plus secondary volume Mon and Wed will fix that within 8 weeks. Trust the process."
+  },
+  {
+    id:"sun", label:"Sun", type:"Rest", typeClass:"rest",
+    title:"ACTIVE RECOVERY",
+    subtitle:"",
+    rest: true,
+    sections:[
+      { name:"Optional", exs:[
+        { name:"20-30 min walk", detail:"Easy pace", why:"Blood flow and fat oxidation" },
+        { name:"Foam rolling", detail:"10-15 min", why:"Quads, IT band, thoracic spine" },
+        { name:"Breathwork", detail:"10 min", why:"Nasal breathing — nervous system recovery" }
+      ]}
+    ],
+    note:"Growth happens during recovery. Eat your protein. Sleep 7-9 hours."
+  }
+];
+
+const progress = {};
+days.forEach(d => { progress[d.id] = new Set(); });
+
+let activeDay = 'mon';
+
+function getTotalExs(day) {
+  return day.sections.reduce((t, s) => t + s.exs.length, 0);
+}
+
+function renderNav() {
+  const nav = document.getElementById('dayNav');
+  nav.innerHTML = '';
+  days.forEach(d => {
+    const btn = document.createElement('button');
+    btn.className = 'day-btn' + (d.id === activeDay ? ' active' : '');
+    btn.innerHTML = `
+      <div class="d-label">${d.label}</div>
+      <div class="day-dot dot-${d.typeClass}" style="font-size:9px;letter-spacing:.05em;">${d.type.split(' ')[0].substring(0,3).toUpperCase()}</div>
+      <div class="active-bar"></div>
+    `;
+    btn.addEventListener('click', () => { activeDay = d.id; render(); });
+    nav.appendChild(btn);
+  });
+}
+
+function renderContent() {
+  const panel = document.getElementById('content');
+  const day = days.find(d => d.id === activeDay);
+  const done = progress[day.id];
+  const total = getTotalExs(day);
+  const doneCount = done.size;
+
+  if (day.rest) {
+    panel.innerHTML = `
+      <div class="day-header">
+        <span class="day-type-badge bg-${day.typeClass}">${day.type}</span>
+        <div class="day-big-title c-${day.typeClass}">${day.title}</div>
+        <div class="day-subtitle">Full rest. This is when you actually grow.</div>
+      </div>
+      <div class="rest-card">
+        <div class="rest-icon">🌑</div>
+        <div class="rest-title">REST DAY</div>
+        <div class="rest-sub">Eat enough protein.<br>Sleep 7-9 hours.<br>Come back stronger.</div>
+      </div>
+      ${day.sections.map(sec => `
+        <div class="section">
+          <div class="section-label">${sec.name}</div>
+          ${sec.exs.map((ex, i) => {
+            const key = sec.name + '-' + i;
+            const isDone = done.has(key);
+            return `<div class="ex-card${isDone ? ' done' : ''}" data-key="${key}" data-day="${day.id}">
+              <div class="ex-left">
+                <div class="ex-name">${ex.name}</div>
+                <div class="ex-why">${ex.why}</div>
+              </div>
+              <div class="ex-right">
+                <div class="ex-detail">${ex.detail}</div>
+                <button class="check-btn" onclick="event.stopPropagation()">
+                  <svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4l3.5 3.5L11 1" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      `).join('')}
+      ${day.note ? `<div class="note-box"><strong>Note —</strong> ${day.note}</div>` : ''}
+    `;
+  } else {
+    panel.innerHTML = `
+      <div class="day-header">
+        <span class="day-type-badge bg-${day.typeClass}">${day.type}</span>
+        <div class="day-big-title c-${day.typeClass}">${day.title}</div>
+        <div class="day-subtitle">${day.subtitle}</div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="pFill" style="width:${total ? Math.round(doneCount/total*100) : 0}%"></div></div>
+        <div class="progress-text"><strong id="pCount">${doneCount}</strong> / ${total} done</div>
+      </div>
+      ${day.sections.map(sec => `
+        <div class="section">
+          <div class="section-label">${sec.name}</div>
+          ${sec.exs.map((ex, i) => {
+            const key = sec.name + '-' + i;
+            const isDone = done.has(key);
+            return `<div class="ex-card${isDone ? ' done' : ''}" data-key="${key}" data-day="${day.id}">
+              <div class="ex-left">
+                <div class="ex-name">${ex.name}</div>
+                <div class="ex-why">${ex.why}</div>
+              </div>
+              <div class="ex-right">
+                <div class="ex-detail">${ex.detail}</div>
+                <button class="check-btn" onclick="event.stopPropagation()">
+                  <svg width="12" height="9" viewBox="0 0 12 9" fill="none"><path d="M1 4l3.5 3.5L11 1" stroke="#000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </button>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      `).join('')}
+      ${day.note ? `<div class="note-box"><strong>Coach note —</strong> ${day.note}</div>` : ''}
+    `;
+  }
+
+  panel.querySelectorAll('.ex-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const key = card.dataset.key;
+      const dayId = card.dataset.day;
+      if (progress[dayId].has(key)) progress[dayId].delete(key);
+      else progress[dayId].add(key);
+      card.classList.toggle('done');
+      const d = days.find(x => x.id === dayId);
+      const t = getTotalExs(d);
+      const dc = progress[dayId].size;
+      const fill = document.getElementById('pFill');
+      const count = document.getElementById('pCount');
+      if (fill) fill.style.width = (t ? Math.round(dc/t*100) : 0) + '%';
+      if (count) count.textContent = dc;
+    });
+  });
+}
+
+function render() {
+  renderNav();
+  renderContent();
+}
+
+render();
+</script>
+</body>
+</html>
